@@ -3,6 +3,11 @@ pocketbase
 pocketbase.exe
 pb_data/
 
+# Astro / Node
+node_modules/
+dist/
+.astro/
+
 # Local env files
 .env
 .env.local
@@ -19,4 +24,3 @@ pb_data/
 .Trashes
 ehthumbs.db
 Thumbs.db
-

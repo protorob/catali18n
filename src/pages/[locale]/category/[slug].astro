@@ -1,0 +1,165 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { pb } from '../../../lib/pocketbase';
+import { getTranslations } from '../../../lib/translations';
+
+const { locale = 'it', slug } = Astro.params;
+const t = getTranslations(locale);
+
+let categoryName = '';
+let categoryDesc = '';
+let products = [];
+
+try {
+  // 1. Fetch language record
+  const langRecord = await pb.collection('languages').getFirstListItem(`code="${locale}"`);
+  
+  // 2. Fetch active category
+  const categoryI18n = await pb.collection('categories_i18n').getFirstListItem(
+    `slug="${slug}" && language="${langRecord.id}"`,
+    { expand: 'record' }
+  );
+
+  categoryName = categoryI18n.name;
+  categoryDesc = categoryI18n.description;
+
+  const categoryId = categoryI18n.expand?.record?.id;
+
+  // 3. Fetch products for this category (either primary category or in extra_categories list)
+  const pbProducts = await pb.collection('products_i18n').getFullList({
+    filter: `language="${langRecord.id}" && (record.category="${categoryId}" || record.extra_categories ~ "${categoryId}")`,
+    expand: 'record',
+  });
+  
+  products = pbProducts;
+} catch (err) {
+  console.warn("PocketBase unreachable or category not found. Using fallback mock products.");
+  
+  // High fidelity fallback names
+  if (slug === 'electronics') {
+    categoryName = locale === 'it' ? 'Elettronica Industriale' : 'Industrial Electronics';
+    categoryDesc = locale === 'it' ? 'Componentistica avanzata e controllori logici per stabilimenti produttivi.' : 'Advanced components and logic controllers for production facilities.';
+    products = [
+      {
+        name: 'PLC Controller H100',
+        prod_title: 'Programmable Logic Controller H100',
+        slug: 'plc-controller-h100',
+        prod_description: 'Industrial grade PLC with 16 inputs and 12 outputs, Din-rail mounted.',
+        expand: {
+          record: {
+            id: 'fallback_p1',
+            product_sku: 'PLC-H100-XYZ',
+            product_ean: '8012345678901'
+          }
+        }
+      },
+      {
+        name: 'Modulatore Analogico M40',
+        prod_title: 'Analog Signal Modulator M40',
+        slug: 'analog-modulator-m40',
+        prod_description: 'Modulates 4-20mA signals to RS485 Modbus protocol for PLC interfaces.',
+        expand: {
+          record: {
+            id: 'fallback_p2',
+            product_sku: 'MOD-M40-ANA',
+            product_ean: '8012345678903'
+          }
+        }
+      }
+    ];
+  } else if (slug === 'machinery') {
+    categoryName = locale === 'it' ? 'Attrezzature & Macchinari' : 'Equipment & Machinery';
+    categoryDesc = locale === 'it' ? 'Macchine utensili e robotica per la manifattura.' : 'Machine tools and robotics for manufacturing.';
+    products = [
+      {
+        name: 'Pistone Pneumatico P5',
+        prod_title: 'Pneumatic Actuator P5',
+        slug: 'pneumatic-actuator-p5',
+        prod_description: 'Double acting pneumatic cylinder with magnetic sensor slots.',
+        expand: {
+          record: {
+            id: 'fallback_p3',
+            product_sku: 'ACT-P5-PNEU',
+            product_ean: '8012345678904'
+          }
+        }
+      }
+    ];
+  } else {
+    categoryName = slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : 'Catalog';
+    categoryDesc = 'Industrial goods and product lines.';
+    products = [];
+  }
+}
+---
+
+<Layout title={categoryName} description={categoryDesc.replace(/<[^>]*>/g, '')}>
+  <div class="py-6">
+    
+    <!-- Breadcrumbs -->
+    <nav class="flex mb-8 text-xs font-semibold text-gray-500 uppercase tracking-wider" aria-label="Breadcrumb">
+      <a href={`/${locale}`} class="hover:text-brand-primary transition-colors">Home</a>
+      <span class="mx-2 text-gray-400">/</span>
+      <span class="text-gray-400">{locale === 'it' ? 'Categorie' : 'Categories'}</span>
+      <span class="mx-2 text-gray-400">/</span>
+      <span class="text-gray-700 dark:text-gray-300">{categoryName}</span>
+    </nav>
+
+    <!-- Header info banner -->
+    <div class="mb-12 border-b border-app-border/40 pb-8">
+      <h1 class="text-4xl font-bold tracking-tight mb-4">{categoryName}</h1>
+      <div class="text-gray-600 dark:text-gray-400 font-light max-w-3xl leading-relaxed" html:set={categoryDesc}>
+        {categoryDesc.startsWith('<') ? <Fragment set:html={categoryDesc} /> : <p>{categoryDesc}</p>}
+      </div>
+    </div>
+
+    <!-- Product list grid -->
+    {products.length > 0 ? (
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {products.map((prod) => (
+          <div class="flex flex-col bg-app-card border border-app-border/60 rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-200">
+            <div class="h-44 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center p-4">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="w-14 h-14 text-gray-400 dark:text-gray-600">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+              </svg>
+            </div>
+            
+            <div class="flex-grow p-6 flex flex-col justify-between">
+              <div>
+                <span class="text-[10px] uppercase font-bold tracking-wider text-brand-primary">
+                  {prod.expand?.record?.product_sku || 'SKU-PENDING'}
+                </span>
+                <h2 class="text-xl font-bold mt-1 text-app-fg line-clamp-1">
+                  {prod.name || prod.prod_title}
+                </h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 line-clamp-2 font-light">
+                  {prod.prod_description?.replace(/<[^>]*>/g, '') || ''}
+                </p>
+              </div>
+
+              <div class="mt-6 pt-4 border-t border-app-border/40 flex justify-between items-center">
+                <a
+                  href={`/${locale}/product/${prod.slug}`}
+                  class="text-sm font-semibold text-brand-primary hover:text-brand-hover inline-flex items-center"
+                >
+                  {locale === 'it' ? 'Vedi Prodotto' : 'View Product'}
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 ml-1">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div class="text-center py-20 bg-app-card border border-app-border border-dashed rounded-3xl">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="w-12 h-12 mx-auto text-gray-400 mb-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 0 1 2.008 1.24l.885 1.77a2.25 2.25 0 0 0 2.007 1.24h1.98a2.25 2.25 0 0 0 2.007-1.24l.885-1.77a2.25 2.25 0 0 1 2.007-1.24h3.86m-18 0h18" />
+        </svg>
+        <p class="text-gray-500 font-light">{locale === 'it' ? 'Nessun prodotto disponibile in questa categoria.' : 'No products available in this category.'}</p>
+      </div>
+    )}
+
+  </div>
+</Layout>

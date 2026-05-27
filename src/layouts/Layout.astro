@@ -1,0 +1,461 @@
+---
+import { getTranslations } from '../lib/translations';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "Catali18n Product Catalog" } = Astro.props;
+
+// Determine current locale from URL or fallback
+const locale = Astro.currentLocale || 'it';
+const t = getTranslations(locale);
+
+const currentPathname = Astro.url.pathname;
+const targetLocale = locale === 'it' ? 'en' : 'it';
+const targetLocaleName = locale === 'it' ? 'EN' : 'IT';
+
+// Simple switcher to toggle between /it/ and /en/
+let targetPathname = currentPathname;
+if (currentPathname.startsWith('/it')) {
+  targetPathname = currentPathname.replace(/^\/it/, '/en');
+} else if (currentPathname.startsWith('/en')) {
+  targetPathname = currentPathname.replace(/^\/en/, '/it');
+} else {
+  targetPathname = `/${targetLocale}`;
+}
+---
+
+<!DOCTYPE html>
+<html lang={locale} class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title} | Catali18n</title>
+    <meta name="description" content={description} />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script is:inline>
+      // Sync dark mode configuration before paint to avoid flickering
+      const theme = (() => {
+        if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+          return localStorage.getItem('theme');
+        }
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          return 'dark';
+        }
+        return 'light';
+      })();
+      
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    </script>
+  </head>
+  <body class="flex flex-col min-h-screen bg-app-bg text-app-fg transition-theme">
+    
+    <!-- Menubar / Navigation -->
+    <header class="sticky top-0 z-50 glass w-full transition-theme">
+      <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          
+          <!-- Logo -->
+          <div class="flex-shrink-0 flex items-center">
+            <a href={`/${locale}`} class="flex items-center space-x-2">
+              <span class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-500 bg-clip-text text-transparent dark:from-blue-400 dark:to-indigo-300">
+                Catali18n
+              </span>
+            </a>
+          </div>
+
+          <!-- Desktop Menu Items -->
+          <div class="hidden md:flex items-center space-x-8">
+            <a href={`/${locale}`} class="text-sm font-medium hover:text-brand-primary transition-colors">{t.nav.home}</a>
+            <a href={`/${locale}/about`} class="text-sm font-medium hover:text-brand-primary transition-colors">{t.nav.about}</a>
+            <a href={`/${locale}/catalog-download`} class="text-sm font-medium hover:text-brand-primary transition-colors">{t.nav.catalog}</a>
+            <a href={`/${locale}/contact`} class="text-sm font-medium hover:text-brand-primary transition-colors">{t.nav.contact}</a>
+          </div>
+
+          <!-- Utility Bar (Lang, Login, Cart, Mobile Menu button) -->
+          <div class="flex items-center space-x-4">
+            
+            <!-- Language Switcher -->
+            <a href={targetPathname} class="px-3 py-1 text-xs font-semibold rounded-md border border-app-border bg-app-card hover:bg-brand-primary hover:text-white transition-all" aria-label="Switch Language">
+              {targetLocaleName}
+            </a>
+
+            <!-- Cart Indicator (Triggers Sidecart Drawer) -->
+            <button id="cart-header-btn" type="button" class="relative p-2 text-app-fg hover:text-brand-primary transition-colors cursor-pointer" aria-label={t.nav.cart}>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+              </svg>
+              <span id="cart-counter" class="absolute -top-1 -right-1 hidden items-center justify-center min-w-5 h-5 px-1 text-[10px] font-bold text-white bg-red-500 rounded-full animate-pulse">
+                0
+              </span>
+            </button>
+
+            <!-- Login Placeholder -->
+            <a href="#" class="hidden sm:inline-flex items-center text-sm font-medium hover:text-brand-primary transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5 mr-1">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+              </svg>
+              {t.nav.login}
+            </a>
+
+            <!-- Mobile Menu Toggle Button -->
+            <button id="mobile-menu-toggle" type="button" class="md:hidden p-2 text-app-fg hover:text-brand-primary" aria-label="Toggle Menu">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-6 h-6" id="toggle-icon-closed">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              </svg>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-6 h-6 hidden" id="toggle-icon-open">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+          </div>
+        </div>
+      </nav>
+
+      <!-- Mobile Navigation Drawer -->
+      <div id="mobile-menu" class="hidden md:hidden border-t border-app-border bg-app-card transition-theme py-4 px-4 space-y-3">
+        <a href={`/${locale}`} class="block py-2 text-base font-semibold hover:text-brand-primary">{t.nav.home}</a>
+        <a href={`/${locale}/about`} class="block py-2 text-base font-semibold hover:text-brand-primary">{t.nav.about}</a>
+        <a href={`/${locale}/catalog-download`} class="block py-2 text-base font-semibold hover:text-brand-primary">{t.nav.catalog}</a>
+        <a href={`/${locale}/contact`} class="block py-2 text-base font-semibold hover:text-brand-primary">{t.nav.contact}</a>
+        <a href="#" class="block py-2 text-base font-semibold hover:text-brand-primary border-t border-app-border pt-3 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-5 h-5 mr-2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+          </svg>
+          {t.nav.login}
+        </a>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <slot />
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-app-card border-t border-app-border py-12 transition-theme">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <!-- Contact Information -->
+        <div>
+          <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+            {t.footer.contactInfo}
+          </h3>
+          <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+            <li>Catali18n S.r.l.</li>
+            <li>{t.footer.address}</li>
+            <li>{t.footer.phone}</li>
+            <li>{t.footer.email}</li>
+          </ul>
+        </div>
+
+        <!-- Useful Links -->
+        <div>
+          <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+            Links
+          </h3>
+          <ul class="space-y-2 text-sm">
+            <li>
+              <a href={`/${locale}/about`} class="text-gray-600 dark:text-gray-400 hover:text-brand-primary transition-colors">
+                {t.nav.about}
+              </a>
+            </li>
+            <li>
+              <a href={`/${locale}/terms`} class="text-gray-600 dark:text-gray-400 hover:text-brand-primary transition-colors">
+                {t.nav.terms}
+              </a>
+            </li>
+            <li>
+              <a href={`/${locale}/catalog-download`} class="text-gray-600 dark:text-gray-400 hover:text-brand-primary transition-colors">
+                {t.nav.catalog}
+              </a>
+            </li>
+            <li>
+              <a href={`/${locale}/contact`} class="text-gray-600 dark:text-gray-400 hover:text-brand-primary transition-colors">
+                {t.nav.contact}
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Theme Configuration -->
+        <div>
+          <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+            {t.footer.themeLabel}
+          </h3>
+          <div class="flex space-x-2">
+            <button
+              id="theme-light-btn"
+              type="button"
+              class="px-4 py-2 text-xs font-semibold rounded-md border border-app-border bg-app-bg hover:bg-brand-primary hover:text-white transition-all"
+            >
+              ☀️ {t.footer.themeLight}
+            </button>
+            <button
+              id="theme-dark-btn"
+              type="button"
+              class="px-4 py-2 text-xs font-semibold rounded-md border border-app-border bg-app-bg hover:bg-brand-primary hover:text-white transition-all"
+            >
+              🌙 {t.footer.themeDark}
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pt-8 border-t border-app-border/40 text-center text-xs text-gray-500">
+        &copy; {new Date().getFullYear()} Catali18n. All rights reserved.
+      </div>
+    </footer>
+
+    <!-- Sidecart Drawer Overlay Backdrop -->
+    <div id="sidecart-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 transition-opacity duration-300 opacity-0 pointer-events-none"></div>
+
+    <!-- Sidecart Drawer Panel -->
+    <aside id="sidecart" class="fixed top-0 right-0 z-50 h-full w-full max-w-md bg-app-card border-l border-app-border/60 shadow-2xl transition-transform duration-300 ease-in-out translate-x-full flex flex-col transition-theme">
+      
+      <!-- Sidecart Header -->
+      <div class="p-6 border-b border-app-border/40 flex items-center justify-between">
+        <h2 class="text-xl font-bold flex items-center gap-2 text-app-fg">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-brand-primary">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+          </svg>
+          <span>{locale === 'it' ? 'Carrello Rapido' : 'Quick Cart'}</span>
+        </h2>
+        <button id="sidecart-close" class="p-2 text-gray-500 hover:text-brand-primary transition-colors cursor-pointer" aria-label="Close Cart">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Sidecart Body (Scrollable items) -->
+      <div id="sidecart-items" class="flex-grow overflow-y-auto p-6 space-y-4">
+        <!-- Dynamically rendered items -->
+      </div>
+
+      <!-- Sidecart Empty State -->
+      <div id="sidecart-empty" class="flex-grow flex flex-col items-center justify-center p-6 text-center hidden">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.2" stroke="currentColor" class="w-16 h-16 text-gray-400 mb-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+        </svg>
+        <p class="text-gray-500 font-light">{locale === 'it' ? 'Il carrello è vuoto.' : 'Your cart is empty.'}</p>
+      </div>
+
+      <!-- Sidecart Footer -->
+      <div id="sidecart-footer" class="p-6 border-t border-app-border/40 bg-app-bg transition-theme">
+        <a
+          href={`/${locale}/cart`}
+          class="w-full py-3.5 bg-brand-primary hover:bg-brand-hover text-white text-sm font-semibold rounded-xl transition-all shadow-md active:scale-98 flex items-center justify-center space-x-2"
+        >
+          <span>{locale === 'it' ? 'Richiedi Preventivo' : 'Request Quotation'}</span>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+          </svg>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Client-side Scripts -->
+    <script>
+      // 1. Mobile Menu Toggle
+      const mobileToggleBtn = document.getElementById('mobile-menu-toggle');
+      const mobileMenu = document.getElementById('mobile-menu');
+      const closedIcon = document.getElementById('toggle-icon-closed');
+      const openIcon = document.getElementById('toggle-icon-open');
+
+      mobileToggleBtn?.addEventListener('click', () => {
+        mobileMenu?.classList.toggle('hidden');
+        closedIcon?.classList.toggle('hidden');
+        openIcon?.classList.toggle('hidden');
+      });
+
+      // 2. Light/Dark Theme Switcher
+      const lightBtn = document.getElementById('theme-light-btn');
+      const darkBtn = document.getElementById('theme-dark-btn');
+
+      lightBtn?.addEventListener('click', () => {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      });
+
+      darkBtn?.addEventListener('click', () => {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      });
+
+      // 3. Sidecart Drawer Logic
+      const sidecart = document.getElementById('sidecart');
+      const sidecartBackdrop = document.getElementById('sidecart-backdrop');
+      const sidecartClose = document.getElementById('sidecart-close');
+      const cartHeaderBtn = document.getElementById('cart-header-btn');
+      const sidecartItems = document.getElementById('sidecart-items');
+      const sidecartEmpty = document.getElementById('sidecart-empty');
+      const sidecartFooter = document.getElementById('sidecart-footer');
+
+      function openSidecart() {
+        if (!sidecart || !sidecartBackdrop) return;
+        renderSidecart();
+        sidecart.classList.remove('translate-x-full');
+        sidecart.classList.add('translate-x-0');
+        sidecartBackdrop.classList.remove('pointer-events-none', 'opacity-0');
+        sidecartBackdrop.classList.add('pointer-events-auto', 'opacity-100');
+      }
+
+      function closeSidecart() {
+        if (!sidecart || !sidecartBackdrop) return;
+        sidecart.classList.remove('translate-x-0');
+        sidecart.classList.add('translate-x-full');
+        sidecartBackdrop.classList.remove('pointer-events-auto', 'opacity-100');
+        sidecartBackdrop.classList.add('pointer-events-none', 'opacity-0');
+      }
+
+      function getCart() {
+        try {
+          return JSON.parse(localStorage.getItem('cart') || '[]');
+        } catch {
+          return [];
+        }
+      }
+
+      function saveCart(cart: any[]) {
+        localStorage.setItem('cart', JSON.stringify(cart));
+        window.dispatchEvent(new Event('cart-updated'));
+      }
+
+      function renderSidecart() {
+        if (!sidecartItems || !sidecartEmpty || !sidecartFooter) return;
+        const cart = getCart();
+        sidecartItems.innerHTML = '';
+
+        if (cart.length === 0) {
+          sidecartEmpty.classList.remove('hidden');
+          sidecartItems.classList.add('hidden');
+          sidecartFooter.classList.add('hidden');
+          return;
+        }
+
+        sidecartEmpty.classList.add('hidden');
+        sidecartItems.classList.remove('hidden');
+        sidecartFooter.classList.remove('hidden');
+
+        cart.forEach((item: any, index: number) => {
+          const itemDiv = document.createElement('div');
+          itemDiv.className = 'flex items-center justify-between p-3.5 bg-app-bg border border-app-border/40 rounded-xl transition-theme gap-4';
+          
+          itemDiv.innerHTML = `
+            <div class="flex-grow min-w-0">
+              <h4 class="text-xs font-bold text-app-fg truncate">${item.name}</h4>
+              <p class="text-[9px] text-gray-500 font-mono mt-0.5">SKU: ${item.sku}</p>
+              <div class="flex items-center mt-2 space-x-2">
+                <button class="side-dec p-1 hover:bg-app-card rounded text-gray-500 font-bold leading-none text-xs" data-idx="${index}">&minus;</button>
+                <span class="text-xs font-semibold px-1">${item.quantity}</span>
+                <button class="side-inc p-1 hover:bg-app-card rounded text-gray-500 font-bold leading-none text-xs" data-idx="${index}">&plus;</button>
+              </div>
+            </div>
+            <button class="side-remove text-gray-400 hover:text-red-500 p-1.5 transition-colors" data-idx="${index}" aria-label="Remove item">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.34 9m-4.72 0L9 9m5.68-3a3 3 0 1 0-5.36 0M19 7.105a8.217 8.217 0 0 1-2.285.222m-10.117 0a8.217 8.217 0 0 1-2.285-.222m14.386 0L17 18.5a1.81 1.81 0 0 1-1.383 1.45m-8.227 0L5 18.5A1.81 1.81 0 0 1 3.617 17L3.615 7.105m10.17 0V5.5A1.5 1.5 0 0 0 12.33 4h-1.66a1.5 1.5 0 0 0-1.5 1.5v1.605" />
+              </svg>
+            </button>
+          `;
+
+          sidecartItems.appendChild(itemDiv);
+        });
+
+        // Event delegation inside quick cart drawer
+        sidecartItems.querySelectorAll('.side-dec').forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+            const idx = parseInt((e.currentTarget as HTMLButtonElement).getAttribute('data-idx') || '0');
+            const cart = getCart();
+            if (cart[idx].quantity > 1) {
+              cart[idx].quantity -= 1;
+              saveCart(cart);
+              renderSidecart();
+            }
+          });
+        });
+
+        sidecartItems.querySelectorAll('.side-inc').forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+            const idx = parseInt((e.currentTarget as HTMLButtonElement).getAttribute('data-idx') || '0');
+            const cart = getCart();
+            cart[idx].quantity += 1;
+            saveCart(cart);
+            renderSidecart();
+          });
+        });
+
+        sidecartItems.querySelectorAll('.side-remove').forEach((btn) => {
+          btn.addEventListener('click', (e) => {
+            const idx = parseInt((e.currentTarget as HTMLButtonElement).getAttribute('data-idx') || '0');
+            const cart = getCart();
+            cart.splice(idx, 1);
+            saveCart(cart);
+            renderSidecart();
+          });
+        });
+      }
+
+      cartHeaderBtn?.addEventListener('click', openSidecart);
+      sidecartClose?.addEventListener('click', closeSidecart);
+      sidecartBackdrop?.addEventListener('click', closeSidecart);
+
+      // 4. Cart counter integration
+      function updateCartCounter() {
+        const counter = document.getElementById('cart-counter');
+        if (!counter) return;
+
+        try {
+          const cart = getCart();
+          const totalQty = cart.reduce((acc: number, item: any) => acc + (item.quantity || 1), 0);
+          
+          if (totalQty > 0) {
+            counter.textContent = String(totalQty);
+            counter.classList.remove('hidden');
+            counter.classList.add('inline-flex');
+          } else {
+            counter.classList.add('hidden');
+            counter.classList.remove('inline-flex');
+          }
+        } catch (e) {
+          console.error("Failed to parse cart items", e);
+        }
+      }
+
+      // Initial run
+      updateCartCounter();
+
+      // Listen for custom events to refresh counter dynamically
+      window.addEventListener('cart-updated', () => {
+        updateCartCounter();
+        renderSidecart();
+        
+        // Auto-open quick sidecart only if we are NOT on the full checkout page
+        if (!window.location.pathname.endsWith('/cart') && !window.location.pathname.endsWith('/cart/')) {
+          openSidecart();
+        }
+      });
+    </script>
+    
+    <style>
+      #sidecart {
+        transition: transform 0.3s ease-in-out, translate 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      #sidecart-backdrop {
+        transition: opacity 0.25s ease-in-out;
+      }
+    </style>
+  </body>
+</html>
