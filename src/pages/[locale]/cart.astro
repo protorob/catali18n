@@ -15,7 +15,7 @@ const t = getTranslations(locale);
       
       <!-- Left Column: Cart Items -->
       <div class="lg:col-span-2 space-y-4">
-        <div id="cart-items-list" class="space-y-4">
+        <div id="cart-items-list" class="space-y-4" data-remove-label={t.cart.actionRemove}>
           <!-- Dynamically populated by client-side JS -->
         </div>
 
@@ -26,7 +26,7 @@ const t = getTranslations(locale);
           </svg>
           <p class="text-gray-500 font-light mb-6">{t.cart.empty}</p>
           <a href={`/${locale}`} class="inline-flex px-5 py-2.5 bg-brand-primary text-white text-sm font-semibold rounded-xl hover:bg-brand-hover transition-colors">
-            {locale === 'it' ? 'Torna al Catalogo' : 'Back to Catalog'}
+            {t.cart.backToCatalog}
           </a>
         </div>
       </div>
@@ -34,7 +34,7 @@ const t = getTranslations(locale);
       <!-- Right Column: Quotation Form -->
       <div id="cart-form-container" class="lg:col-span-1">
         <div class="bg-app-card border border-app-border/60 rounded-3xl p-6 md:p-8 shadow-md sticky top-24">
-          <h2 class="text-xl font-bold mb-6">{locale === 'it' ? 'Dettagli Richiesta' : 'Request Details'}</h2>
+          <h2 class="text-xl font-bold mb-6">{t.cart.requestDetails}</h2>
           
           <form id="quotation-form" class="space-y-4">
             <div>
@@ -67,7 +67,7 @@ const t = getTranslations(locale);
               <textarea id="client-notes" rows="3" class="w-full px-4 py-2.5 rounded-xl border border-app-border bg-app-bg text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-primary transition-all resize-none"></textarea>
             </div>
 
-            <button type="submit" class="w-full mt-4 py-3.5 bg-brand-primary hover:bg-brand-hover text-white font-semibold rounded-xl text-sm transition-all shadow-md active:scale-98">
+            <button type="submit" class="w-full mt-4 py-3.5 bg-brand-primary hover:bg-brand-hover text-white font-semibold rounded-xl text-sm transition-all shadow-md active:scale-98" data-sending-label={t.cart.sending}>
               {t.cart.submit}
             </button>
           </form>
@@ -85,12 +85,10 @@ const t = getTranslations(locale);
       </div>
       <h2 class="text-2xl font-bold mb-4">{t.cart.success}</h2>
       <p class="text-sm text-gray-500 dark:text-gray-400 font-light mb-8">
-        {locale === 'it' 
-          ? 'Il nostro team vendite analizzerà la tua richiesta e ti contatterà al più presto.' 
-          : 'Our sales team will analyze your request and get back to you shortly.'}
+        {t.cart.successSubtitle}
       </p>
       <a href={`/${locale}`} class="inline-flex px-6 py-3 bg-brand-primary text-white text-sm font-semibold rounded-xl hover:bg-brand-hover transition-colors">
-        {locale === 'it' ? 'Torna alla Home' : 'Back to Home'}
+        {t.cart.backToHome}
       </a>
     </div>
 
@@ -125,6 +123,7 @@ const t = getTranslations(locale);
     const cart = getCart();
 
     if (!listContainer) return;
+    const removeLabel = listContainer.getAttribute('data-remove-label') || 'Remove';
     listContainer.innerHTML = '';
 
     if (cart.length === 0) {
@@ -160,7 +159,7 @@ const t = getTranslations(locale);
             <button class="inc-qty p-2 text-gray-500 font-bold hover:bg-app-card" data-idx="${index}">&plus;</button>
           </div>
           <button class="remove-item text-xs font-semibold text-red-500 hover:text-red-600 transition-colors" data-idx="${index}">
-            Remove
+            ${removeLabel}
           </button>
         </div>
       `;
@@ -219,7 +218,8 @@ const t = getTranslations(locale);
 
     const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Sending...';
+    const sendingLabel = submitBtn.getAttribute('data-sending-label') || 'Sending...';
+    submitBtn.textContent = sendingLabel;
 
     const quotationData = {
       name,

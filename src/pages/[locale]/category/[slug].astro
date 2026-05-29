@@ -100,7 +100,7 @@ try {
     <nav class="flex mb-8 text-xs font-semibold text-gray-500 uppercase tracking-wider" aria-label="Breadcrumb">
       <a href={`/${locale}`} class="hover:text-brand-primary transition-colors">Home</a>
       <span class="mx-2 text-gray-400">/</span>
-      <span class="text-gray-400">{locale === 'it' ? 'Categorie' : 'Categories'}</span>
+      <span class="text-gray-400">{t.nav.categories}</span>
       <span class="mx-2 text-gray-400">/</span>
       <span class="text-gray-700 dark:text-gray-300">{categoryName}</span>
     </nav>
@@ -142,7 +142,7 @@ try {
                   href={`/${locale}/product/${prod.slug}`}
                   class="text-sm font-semibold text-brand-primary hover:text-brand-hover inline-flex items-center"
                 >
-                  {locale === 'it' ? 'Vedi Prodotto' : 'View Product'}
+                  {t.product.viewProduct}
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 ml-1">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                   </svg>
@@ -157,7 +157,7 @@ try {
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="w-12 h-12 mx-auto text-gray-400 mb-4">
           <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 0 1 2.008 1.24l.885 1.77a2.25 2.25 0 0 0 2.007 1.24h1.98a2.25 2.25 0 0 0 2.007-1.24l.885-1.77a2.25 2.25 0 0 1 2.007-1.24h3.86m-18 0h18" />
         </svg>
-        <p class="text-gray-500 font-light">{locale === 'it' ? 'Nessun prodotto disponibile in questa categoria.' : 'No products available in this category.'}</p>
+        <p class="text-gray-500 font-light">{t.product.noProductsInCategory}</p>
       </div>
     )}
 

@@ -33,11 +33,21 @@ export const translations = {
       quantity: 'Quantità',
       inCart: 'Nel carrello',
       related: 'Prodotti correlati',
-      backToCategory: 'Torna alla categoria'
+      backToCategory: 'Torna alla categoria',
+      viewProduct: 'Vedi Prodotto',
+      productDetails: 'Dettagli Prodotto',
+      noProductsInCategory: 'Nessun prodotto disponibile in questa categoria.',
+      browseCatalog: 'Sfoglia Catalogo',
+      featuredProducts: 'Prodotti in Evidenza',
+      browseProductsSub: 'Sfoglia i prodotti raggruppati per applicazione o divisione',
+      featuredProductsSub: 'Componenti industriali evidenziati e best-seller',
+      added: 'Aggiunto'
     },
     cart: {
       title: 'Il Tuo Preventivo',
+      titleQuick: 'Carrello Rapido',
       empty: 'Il carrello è vuoto. Aggiungi prodotti dal catalogo per richiedere un preventivo.',
+      emptyQuick: 'Il carrello è vuoto.',
       submit: 'Invia Richiesta di Preventivo',
       name: 'Nome Completo',
       email: 'Indirizzo Email',
@@ -49,7 +59,13 @@ export const translations = {
       item: 'Articolo',
       qty: 'Qtà',
       totalItems: 'Articoli totali',
-      actionRemove: 'Rimuovi'
+      actionRemove: 'Rimuovi',
+      requestQuote: 'Richiedi Preventivo',
+      backToCatalog: 'Torna al Catalogo',
+      requestDetails: 'Dettagli Richiesta',
+      successSubtitle: 'Il nostro team vendite analizzerà la tua richiesta e ti contatterà al più presto.',
+      backToHome: 'Torna alla Home',
+      sending: 'Invio in corso...'
     }
   },
   en: {
@@ -86,11 +102,21 @@ export const translations = {
       quantity: 'Quantity',
       inCart: 'In cart',
       related: 'Related Products',
-      backToCategory: 'Back to category'
+      backToCategory: 'Back to category',
+      viewProduct: 'View Product',
+      productDetails: 'Product Details',
+      noProductsInCategory: 'No products available in this category.',
+      browseCatalog: 'Browse Catalog',
+      featuredProducts: 'Featured Products',
+      browseProductsSub: 'Browse products grouped by application or division',
+      featuredProductsSub: 'Highlighted industrial components and best-sellers',
+      added: 'Added'
     },
     cart: {
       title: 'Your Quotation',
+      titleQuick: 'Quick Cart',
       empty: 'Your cart is empty. Add products from the catalog to request a quotation.',
+      emptyQuick: 'Your cart is empty.',
       submit: 'Send Quotation Request',
       name: 'Full Name',
       email: 'Email Address',
@@ -102,7 +128,13 @@ export const translations = {
       item: 'Item',
       qty: 'Qty',
       totalItems: 'Total items',
-      actionRemove: 'Remove'
+      actionRemove: 'Remove',
+      requestQuote: 'Request Quotation',
+      backToCatalog: 'Back to Catalog',
+      requestDetails: 'Request Details',
+      successSubtitle: 'Our sales team will analyze your request and get back to you shortly.',
+      backToHome: 'Back to Home',
+      sending: 'Sending...'
     }
   }
 } as const;

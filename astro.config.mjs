@@ -2,6 +2,7 @@ import { defineConfig } from 'astro/config';
 import node from '@astrojs/node';
 import tailwindcss from '@tailwindcss/vite';
 import { fileURLToPath } from 'url';
+import path from 'path';
 
 // https://astro.build/config
 export default defineConfig({
@@ -19,10 +20,13 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss()],
+    optimizeDeps: {
+      exclude: ['pocketbase'],
+    },
     resolve: {
       alias: {
-        'pocketbase': fileURLToPath(new URL('./node_modules/pocketbase', import.meta.url))
-      }
-    }
+        'pocketbase': path.resolve('./node_modules/pocketbase'),
+      },
+    },
   },
 });

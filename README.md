@@ -1,58 +1,143 @@
-# Catali18n 🌐📦
+# Catali18n
 
-A lightweight, high-performance internationalized (i18n) product catalog built using **Astro (v5)** and **PocketBase**.
-
-This project provides a responsive localized frontend powered by Astro and styled with Tailwind CSS v4, backed by a relational localization schema in PocketBase for managing products, categories, and translation records.
+A lightweight, internationalized (i18n) B2B product catalog built with **Astro 6** and **PocketBase**. Instead of a traditional checkout, it drives a **request-a-quotation** flow — customers browse localized products and submit an inquiry form that is stored in PocketBase.
 
 ---
 
-## 🚀 Tech Stack
+## Tech Stack
 
-*   **Frontend**: [Astro](https://astro.build/) (SSR mode with Node adapter)
-*   **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) (Vite plugin integration)
-*   **Database & Backend**: [PocketBase](https://pocketbase.io/) (Go-based single-file database)
+- **Frontend:** [Astro 6](https://astro.build/) — SSR mode via `@astrojs/node` standalone adapter
+- **Styling:** [Tailwind CSS v4](https://tailwindcss.com/) — Vite plugin integration, CSS variable-based theming
+- **Backend / DB:** [PocketBase](https://pocketbase.io/) — single-file Go database with built-in REST API
 
 ---
 
-## 🛠️ Getting Started (Recreating the App after Cloning)
+## Features
 
-Follow these steps to set up the backend database schema and the frontend dev server after cloning the repository.
+- IT / EN localization via `[locale]/` routing and a static `translations.ts` dictionary
+- Dark / light theme toggle with no flash of unstyled content (theme applied inline before first paint)
+- Glassmorphism sticky navbar with responsive mobile drawer
+- Slide-in sidecart drawer with live item counter
+- Quotation cart page with contact form submitted to PocketBase
+- Localized Markdown static pages (About, Terms, Contact, Catalog Download)
+- Graceful offline/dev fallback — all data-fetching pages render rich mock data when PocketBase is unreachable
 
-### 1. Download & Launch PocketBase
-If the `pocketbase` binary is not in your cloned repository, download it from [pocketbase.io](https://pocketbase.io/docs/) for your operating system.
+---
 
-Start the database server locally:
+## Getting Started
+
+### 1. Download and launch PocketBase
+
+The `pocketbase` binary is excluded from git. Download it for your OS from [pocketbase.io/docs](https://pocketbase.io/docs/) and place it in the project root, then start it:
+
 ```bash
 ./pocketbase serve
 ```
-*The local database dashboard will be running at [http://127.0.0.1:8090/_/](http://127.0.0.1:8090/_/)*
 
-### 2. Import the Collection Schema
-Because the local database (`pb_data/`) is ignored by Git, you need to import the collections structure:
-1.  Open the Admin UI at [http://127.0.0.1:8090/_/](http://127.0.0.1:8090/_/) and create your initial admin account.
-2.  Navigate to **Settings** (gear icon) &rarr; **Sync** &rarr; **Import collections**.
-3.  Click **Load from JSON file** and select the [collections.json](collections.json) file located at the root of this project.
-4.  Review the collections list and click **Import** to load the entire schema (`languages`, `categories`, `categories_i18n`, `products`, `products_i18n`).
+The admin UI will be available at `http://127.0.0.1:8090/_/`.
 
-### 3. Add Locales in PocketBase
-In the Admin UI, go to the `languages` collection and add records for your locales:
-*   **Italian**: `code`: `it`, `name`: `Italiano`, `is_default`: `true`
-*   **English**: `code`: `en`, `name`: `English`, `is_default`: `false`
+### 2. Import the collection schema
 
-### 4. Install & Launch the Astro Frontend
-Install node dependencies and launch the dev server:
+The database schema is version-controlled as `pb_schema.json` in the project root.
+
+1. Open the admin UI and create your initial admin account.
+2. Go to **Settings → Sync → Import collections**.
+3. Click **Load from JSON file**, select `pb_schema.json`, and confirm.
+
+Collections loaded: `languages`, `categories`, `categories_i18n`, `products`, `products_i18n`, `quotations`.
+
+### 3. Add locales
+
+In the admin UI, open the `languages` collection and add:
+
+| code | name     | is_default |
+|------|----------|------------|
+| `it` | Italiano | `true`     |
+| `en` | English  | `false`    |
+
+### 4. Install dependencies and run
+
 ```bash
 npm install
 npm run dev
 ```
-*Your frontend will be running at [http://localhost:4321](http://localhost:4321) (which automatically redirects to `/it` or `/en`).*
+
+The dev server starts at `http://localhost:4321` and auto-redirects to `/it`.
+
+### Environment variables
+
+Create a `.env.local` to override the PocketBase URL (optional):
+
+```
+PUBLIC_POCKETBASE_URL=http://127.0.0.1:8090
+```
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
-*   `collections.json` — Database collection schemas (importable via Admin panel).
-*   `src/content.config.ts` — Astro Content Collections config (new Astro 5 content layer glob loader).
-*   `src/content/pages/` — Localized Markdown pages (`about.md`, `terms.md`, `contact.md`, etc.).
-*   `src/layouts/Layout.astro` — Layout with responsive mobile menubar, light/dark theme footer switcher, and slide-in sidecart drawer.
-*   `src/pages/[locale]/` — Dynamic routes for localized homepages, static markdown content, categories, and products.
+```
+src/
+├── content/
+│   └── pages/
+│       ├── en/          # Markdown static pages in English
+│       └── it/          # Markdown static pages in Italian
+├── layouts/
+│   └── Layout.astro     # Shared shell: navbar, sidecart drawer, footer, theme scripts
+├── lib/
+│   ├── pocketbase.ts    # PocketBase client singleton
+│   └── translations.ts  # UI string dictionary (it / en)
+├── pages/
+│   ├── index.astro               # Root redirect → /it
+│   └── [locale]/
+│       ├── index.astro           # Homepage: hero + categories + featured products
+│       ├── [slug].astro          # Generic Markdown pages (about, contact, terms…)
+│       ├── cart.astro            # Quotation cart + contact form
+│       ├── category/[slug].astro # Category product listing
+│       └── product/[slug].astro  # Product detail + add-to-quote CTA
+└── styles/
+    └── global.css       # Tailwind import + CSS variable theme tokens
+content.config.ts         # Astro Content Collections config (pages glob loader)
+pb_schema.json            # PocketBase collection schemas (version-controlled)
+astro.config.mjs          # Astro + Vite configuration
+```
+
+---
+
+## PocketBase Schema Overview
+
+| Collection        | Purpose                                                        |
+|-------------------|----------------------------------------------------------------|
+| `languages`       | Supported locales (`code`, `name`, `is_default`)               |
+| `categories`      | Base category record (banner image, etc.)                      |
+| `categories_i18n` | Localized category name, slug, description                     |
+| `products`        | Base product record (`product_sku`, `product_ean`, `category`) |
+| `products_i18n`   | Localized product name, slug, description                      |
+| `quotations`      | Submitted quote requests (contact details + items JSON)        |
+
+---
+
+## Known Gotcha — PocketBase Binary vs npm Package
+
+The `pocketbase` server binary in the project root shares its name with the `pocketbase` npm package. Vite's dependency optimizer will attempt to process the binary as JavaScript and crash with an `Unexpected "\x7f"` (ELF magic byte) error.
+
+This is already handled in `astro.config.mjs` via:
+
+```js
+vite: {
+  optimizeDeps: { exclude: ['pocketbase'] },
+  resolve: { alias: { pocketbase: path.resolve('./node_modules/pocketbase') } },
+}
+```
+
+If the error reappears after clearing Vite cache (`.astro/`), verify these two keys are present.
+
+---
+
+## Scripts
+
+| Command           | Description                  |
+|-------------------|------------------------------|
+| `npm run dev`     | Start Astro dev server       |
+| `npm run build`   | Production build to `dist/`  |
+| `npm run preview` | Preview the production build |

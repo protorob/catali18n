@@ -191,6 +191,7 @@ if (!product) {
             data-id={product.id}
             data-name={product.name}
             data-sku={product.sku}
+            data-added-label={t.product.added}
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -252,7 +253,8 @@ if (!product) {
       const btnSpan = addBtn.querySelector('span');
       if (btnSpan) {
         const originalText = btnSpan.textContent;
-        btnSpan.textContent = "✓ Added";
+        const addedLabel = addBtn.getAttribute('data-added-label') || 'Added';
+        btnSpan.textContent = `✓ ${addedLabel}`;
         addBtn.classList.remove('bg-brand-primary', 'hover:bg-brand-hover');
         addBtn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
         
