@@ -14,13 +14,15 @@ A lightweight, internationalized (i18n) B2B product catalog built with **Astro 6
 
 ## Features
 
-- IT / EN localization via `[locale]/` routing and a static `translations.ts` dictionary
-- Dark / light theme toggle with no flash of unstyled content (theme applied inline before first paint)
+- Multi-language localization via `[locale]/` routing — languages driven by PocketBase `languages` collection
+- Navbar language switcher dropdown showing all active languages with full names
+- Single dark / light theme toggle with no flash of unstyled content (theme applied inline before first paint)
 - Glassmorphism sticky navbar with responsive mobile drawer
 - Slide-in sidecart drawer with live item counter
 - Quotation cart page with contact form submitted to PocketBase
 - Localized Markdown static pages (About, Terms, Contact, Catalog Download)
 - Graceful offline/dev fallback — all data-fetching pages render rich mock data when PocketBase is unreachable
+- CLI translation script powered by DeepL — auto-translates all catalog content from the default language
 
 ---
 
@@ -66,10 +68,16 @@ The dev server starts at `http://localhost:4321` and auto-redirects to `/it`.
 
 ### Environment variables
 
-Create a `.env.local` to override the PocketBase URL (optional):
+Create a `.env.local` for configuration (already gitignored):
 
 ```
+# PocketBase
 PUBLIC_POCKETBASE_URL=http://127.0.0.1:8090
+
+# Required only for the translation script
+PB_ADMIN_EMAIL=your@admin.email
+PB_ADMIN_PASSWORD=yourpassword
+DEEPL_API_KEY=your-deepl-key
 ```
 
 ---
@@ -77,6 +85,8 @@ PUBLIC_POCKETBASE_URL=http://127.0.0.1:8090
 ## Project Structure
 
 ```
+scripts/
+└── translate.mjs         # DeepL translation CLI
 src/
 ├── content/
 │   └── pages/
@@ -136,8 +146,23 @@ If the error reappears after clearing Vite cache (`.astro/`), verify these two k
 
 ## Scripts
 
-| Command           | Description                  |
-|-------------------|------------------------------|
-| `npm run dev`     | Start Astro dev server       |
-| `npm run build`   | Production build to `dist/`  |
-| `npm run preview` | Preview the production build |
+| Command                              | Description                                        |
+|--------------------------------------|----------------------------------------------------|
+| `npm run dev`                        | Start Astro dev server                             |
+| `npm run build`                      | Production build to `dist/`                        |
+| `npm run preview`                    | Preview the production build                       |
+| `npm run translate`                  | Translate all missing catalog content via DeepL    |
+| `npm run translate -- --force`       | Re-translate and overwrite existing translations   |
+| `npm run translate -- --lang en`     | Translate to a single target language only         |
+| `npm run translate -- --dry-run`     | Preview what would be translated without writing   |
+
+### How the translation script works
+
+`scripts/translate.mjs` connects to PocketBase as an admin, reads all `categories_i18n` and `products_i18n` records in the default language (`is_default: true`), and creates or updates matching records for every other language in the `languages` collection.
+
+- Text fields (`name`, `prod_title`) are translated as plain text
+- Rich fields (`description`, `prod_description`) are translated with `tagHandling: 'html'` to preserve markup
+- `slug` is auto-generated from the translated `name` via slugify — never sent to DeepL
+- Uses batched API calls per language to minimize DeepL requests
+- Requires `PB_ADMIN_EMAIL`, `PB_ADMIN_PASSWORD`, and `DEEPL_API_KEY` in `.env.local`
+- The DeepL free tier is supported automatically (key suffix `:fx` routes to the free endpoint)

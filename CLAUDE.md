@@ -26,7 +26,7 @@ The app works without PocketBase running — every page catches errors and rende
 
 Astro i18n routing is configured in `astro.config.mjs` with `prefixDefaultLocale: true`. All pages live under `src/pages/[locale]/`. The root `src/pages/index.astro` does a server-side redirect to `/it`.
 
-Supported locales: `it` (default), `en`.
+Supported locales are driven by the `languages` PocketBase collection — not hardcoded. `it` is the default (`is_default: true`). Add new locales in PocketBase and run the translation script; the navbar switcher picks them up automatically.
 
 ### Translation system
 
@@ -63,9 +63,34 @@ A custom `cart-updated` window event is dispatched on every mutation. `Layout.as
 
 On the `/[locale]/cart` page, the form submission does a **client-side dynamic import** of PocketBase (`await import('pocketbase')`) to post to the `quotations` collection. The `finally` block always clears the cart and shows the success state, so it degrades gracefully when PocketBase is not running.
 
+### Language switcher
+
+`Layout.astro` fetches the full `languages` list from PocketBase in the frontmatter and builds a dropdown. Each entry shows `code – name` (e.g. `en – English`). The trigger button shows only the current locale code plus a globe icon. Falls back to `[{code:'it',...},{code:'en',...}]` if PocketBase is unreachable. URL switching uses a generic segment-replace: `/<currentLocale>/...` → `/<targetLocale>/...`.
+
 ### Static Markdown pages
 
 `src/content/pages/[locale]/[slug].md` — frontmatter requires `title`, optional `description`. The glob loader in `content.config.ts` maps them to the `pages` collection. Route: `/[locale]/[slug]` (e.g., `/en/about`).
+
+---
+
+## Translation script (`scripts/translate.mjs`)
+
+Reads `categories_i18n` and `products_i18n` source records (default language), sends translatable fields to DeepL, and writes back records for every other language in PocketBase.
+
+**Env vars required in `.env.local`:** `PB_ADMIN_EMAIL`, `PB_ADMIN_PASSWORD`, `DEEPL_API_KEY`
+
+**Auth:** `pb.collection('_superusers').authWithPassword()` — the v0.27 admin auth method.
+
+**Field handling:**
+- `name`, `prod_title` → plain text translation
+- `description`, `prod_description` → `{ tagHandling: 'html' }` to preserve markup
+- `slug` → generated via `slugify(translatedName)`, never sent to DeepL
+
+**DeepL language code mapping:** PocketBase uses `en`/`it`/`de` etc.; DeepL target codes differ (`EN-US`, `IT`, `DE`). The `DEEPL_TARGET_MAP` object in the script handles this. Extend it when adding new languages.
+
+**CLI flags:** `--force` (overwrite existing), `--dry-run` (no writes), `--lang <code>` (single target).
+
+**Free tier:** keys ending in `:fx` are auto-routed to `api-free.deepl.com` by the `deepl-node` SDK.
 
 ---
 
