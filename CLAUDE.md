@@ -71,6 +71,8 @@ On the `/[locale]/cart` page, the form submission does a **client-side dynamic i
 
 `src/content/pages/[locale]/[slug].md` — frontmatter requires `title`, optional `description`. The glob loader in `content.config.ts` maps them to the `pages` collection. Route: `/[locale]/[slug]` (e.g., `/en/about`).
 
+Translations are **fully manual** — one Markdown file per locale per page. Current pages: `about`, `contact`, `terms`, `catalog-download`. To add a new language, create a new folder (e.g. `src/content/pages/de/`) and write translated `.md` files by hand. There is no script for this. If a locale/slug combination is missing, `[slug].astro` redirects to the localized homepage.
+
 ---
 
 ## Content management scripts

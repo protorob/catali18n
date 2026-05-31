@@ -127,6 +127,10 @@ astro.config.mjs          # Astro + Vite configuration
 | `products_i18n`   | Localized product name, slug, description                      |
 | `quotations`      | Submitted quote requests (contact details + items JSON)        |
 
+### Static pages
+
+`about`, `contact`, `terms`, and `catalog-download` are Markdown files under `src/content/pages/<locale>/<slug>.md`. Translations are written by hand — one file per locale per page. To add a new language, create a new folder (e.g. `src/content/pages/de/`) and translate each `.md` file manually. There is no script for this. Missing locale/slug combinations redirect to the localized homepage.
+
 ---
 
 ## Known Gotcha — PocketBase Binary vs npm Package
