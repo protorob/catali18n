@@ -44,7 +44,7 @@ PocketBase collection → schema mapping:
 
 ```
 languages          code, name, is_default
-categories         cat_banner (image file)
+categories         int_ref (internal label, unique), cat_banner (image file)
 categories_i18n    name, slug, description, record (→ categories), language (→ languages)
 products           product_sku, product_ean, category (→ categories), extra_categories[]
 products_i18n      name, slug, prod_title, prod_description, record (→ products), language (→ languages)
@@ -73,20 +73,38 @@ On the `/[locale]/cart` page, the form submission does a **client-side dynamic i
 
 ---
 
-## Translation script (`scripts/translate.mjs`)
+## Content management scripts
 
-Reads `categories_i18n` and `products_i18n` source records (default language), sends translatable fields to DeepL, and writes back records for every other language in PocketBase.
+There are three CLI scripts for managing `categories_i18n` records. All read credentials from `.env.local` and authenticate via `pb.collection('_superusers').authWithPassword()`.
 
-**Env vars required in `.env.local`:** `PB_ADMIN_EMAIL`, `PB_ADMIN_PASSWORD`, `DEEPL_API_KEY`
+Categories are identified by their `int_ref` field (a short internal label like `ELEC`), which is used for display only. Scripts sort categories alphabetically by `int_ref`.
 
-**Auth:** `pb.collection('_superusers').authWithPassword()` — the v0.27 admin auth method.
+### `scripts/categories-i18n.mjs` (`npm run translations:categories`)
+
+Interactive manual entry. Selects any language (including the default), then steps through each category prompting for `name`, `description`, and `slug`. Existing values pre-fill the prompts. Creates or updates records in `categories_i18n`.
+
+**Env vars required:** `PB_ADMIN_EMAIL`, `PB_ADMIN_PASSWORD`
+
+### `scripts/translate-categories.mjs` (`npm run translate:categories`)
+
+Interactive DeepL-assisted translation. Targets only non-default languages. For each category it calls DeepL, shows the proposed translation field by field, and lets the user press Enter to accept or type a correction. Skips already-translated records unless `--force` is passed.
+
+**Env vars required:** `PB_ADMIN_EMAIL`, `PB_ADMIN_PASSWORD`, `DEEPL_API_KEY`
+
+**CLI flags:** `--force` (re-translate records that already exist).
+
+### `scripts/translate.mjs` (`npm run translate`)
+
+Fully automated batch translation. Reads all `categories_i18n` and `products_i18n` source records (default language) and creates or updates records for every other language without prompts.
+
+**Env vars required:** `PB_ADMIN_EMAIL`, `PB_ADMIN_PASSWORD`, `DEEPL_API_KEY`
 
 **Field handling:**
 - `name`, `prod_title` → plain text translation
 - `description`, `prod_description` → `{ tagHandling: 'html' }` to preserve markup
 - `slug` → generated via `slugify(translatedName)`, never sent to DeepL
 
-**DeepL language code mapping:** PocketBase uses `en`/`it`/`de` etc.; DeepL target codes differ (`EN-US`, `IT`, `DE`). The `DEEPL_TARGET_MAP` object in the script handles this. Extend it when adding new languages.
+**DeepL language code mapping:** PocketBase uses `en`/`it`/`de` etc.; DeepL target codes differ (`EN-US`, `IT`, `DE`). The `DEEPL_TARGET_MAP` object in each script handles this. Extend it when adding new languages.
 
 **CLI flags:** `--force` (overwrite existing), `--dry-run` (no writes), `--lang <code>` (single target).
 

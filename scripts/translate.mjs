@@ -38,6 +38,25 @@ function toDeeplSource(code) {
 }
 
 // 3. Slug generation helper
+// For plain-text fields: decode all entities including &amp;
+function decodeEntities(str) {
+  return str
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(parseInt(dec, 10)))
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'");
+}
+
+// For HTML fields: only decode numeric and quote entities; leave &amp; &lt; &gt; as-is
+function decodeHtmlEntities(str) {
+  return str
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCodePoint(parseInt(dec, 10)))
+    .replace(/&apos;/g, "'")
+    .replace(/&quot;/g, '"');
+}
+
 function slugify(text) {
   return text
     .toLowerCase()
@@ -186,7 +205,7 @@ async function main() {
             toDeeplSource(defaultLang.code),
             toDeeplTarget(targetLang.code)
           );
-          translatedNames = namesResult.map((r) => r.text);
+          translatedNames = namesResult.map((r) => decodeEntities(r.text));
 
           const descResult = await translator.translateText(
             descriptions,
@@ -194,7 +213,7 @@ async function main() {
             toDeeplTarget(targetLang.code),
             { tagHandling: 'html' }
           );
-          translatedDescriptions = descResult.map((r) => r.text);
+          translatedDescriptions = descResult.map((r) => decodeHtmlEntities(r.text));
         }
       } catch (err) {
         console.error(`Error: Translation failed for categories in target ${targetLang.code}`, err.message);
@@ -294,14 +313,14 @@ async function main() {
             toDeeplSource(defaultLang.code),
             toDeeplTarget(targetLang.code)
           );
-          translatedNames = namesResult.map((r) => r.text);
+          translatedNames = namesResult.map((r) => decodeEntities(r.text));
 
           const titlesResult = await translator.translateText(
             titles,
             toDeeplSource(defaultLang.code),
             toDeeplTarget(targetLang.code)
           );
-          translatedTitles = titlesResult.map((r) => r.text);
+          translatedTitles = titlesResult.map((r) => decodeEntities(r.text));
 
           const descResult = await translator.translateText(
             descriptions,
@@ -309,7 +328,7 @@ async function main() {
             toDeeplTarget(targetLang.code),
             { tagHandling: 'html' }
           );
-          translatedDescriptions = descResult.map((r) => r.text);
+          translatedDescriptions = descResult.map((r) => decodeHtmlEntities(r.text));
         }
       } catch (err) {
         console.error(`Error: Translation failed for products in target ${targetLang.code}`, err.message);

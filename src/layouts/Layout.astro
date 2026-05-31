@@ -10,8 +10,9 @@ interface Props {
 
 const { title, description = "Catali18n Product Catalog" } = Astro.props;
 
-// Determine current locale from URL or fallback
-const locale = Astro.currentLocale || 'it';
+// Derive locale from the first URL path segment (e.g. /en/products → 'en')
+const [, firstSegment] = Astro.url.pathname.split('/');
+const locale = firstSegment || 'it';
 const t = getTranslations(locale);
 
 const currentPathname = Astro.url.pathname;

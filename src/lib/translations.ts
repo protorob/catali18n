@@ -90,8 +90,8 @@ export const translations = {
       themeLabel: 'Theme'
     },
     hero: {
-      title: 'International Product Catalog',
-      subtitle: 'Browse our premium products and request a custom quotation instantly.',
+      title: 'Premium Italian Food Supply & Private Label',
+      subtitle: 'The Flavors of Italy, Tailored for Your Business. Delivered in Days. Custom mixed pallets. Low-minimum private label. Guaranteed 48-hour quotes.',
       cta: 'Explore Categories'
     },
     product: {

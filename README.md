@@ -22,7 +22,7 @@ A lightweight, internationalized (i18n) B2B product catalog built with **Astro 6
 - Quotation cart page with contact form submitted to PocketBase
 - Localized Markdown static pages (About, Terms, Contact, Catalog Download)
 - Graceful offline/dev fallback — all data-fetching pages render rich mock data when PocketBase is unreachable
-- CLI translation script powered by DeepL — auto-translates all catalog content from the default language
+- CLI scripts for catalog content management: interactive manual entry, interactive DeepL-assisted translation, and fully automated batch translation
 
 ---
 
@@ -86,7 +86,9 @@ DEEPL_API_KEY=your-deepl-key
 
 ```
 scripts/
-└── translate.mjs         # DeepL translation CLI
+├── categories-i18n.mjs   # Interactive CLI — manually enter category translations
+├── translate-categories.mjs # Interactive CLI — DeepL-assisted category translation with review step
+└── translate.mjs         # Batch CLI — auto-translates all catalog content via DeepL
 src/
 ├── content/
 │   └── pages/
@@ -119,7 +121,7 @@ astro.config.mjs          # Astro + Vite configuration
 | Collection        | Purpose                                                        |
 |-------------------|----------------------------------------------------------------|
 | `languages`       | Supported locales (`code`, `name`, `is_default`)               |
-| `categories`      | Base category record (banner image, etc.)                      |
+| `categories`      | Base category record (`int_ref` label, banner image)           |
 | `categories_i18n` | Localized category name, slug, description                     |
 | `products`        | Base product record (`product_sku`, `product_ean`, `category`) |
 | `products_i18n`   | Localized product name, slug, description                      |
@@ -146,23 +148,53 @@ If the error reappears after clearing Vite cache (`.astro/`), verify these two k
 
 ## Scripts
 
-| Command                              | Description                                        |
-|--------------------------------------|----------------------------------------------------|
-| `npm run dev`                        | Start Astro dev server                             |
-| `npm run build`                      | Production build to `dist/`                        |
-| `npm run preview`                    | Preview the production build                       |
-| `npm run translate`                  | Translate all missing catalog content via DeepL    |
-| `npm run translate -- --force`       | Re-translate and overwrite existing translations   |
-| `npm run translate -- --lang en`     | Translate to a single target language only         |
-| `npm run translate -- --dry-run`     | Preview what would be translated without writing   |
+| Command                                      | Description                                                    |
+|----------------------------------------------|----------------------------------------------------------------|
+| `npm run dev`                                | Start Astro dev server                                         |
+| `npm run build`                              | Production build to `dist/`                                    |
+| `npm run preview`                            | Preview the production build                                   |
+| `npm run translations:categories`            | Interactive CLI — manually enter category translations         |
+| `npm run translate:categories`               | Interactive CLI — DeepL suggests, you review each field        |
+| `npm run translate:categories -- --force`    | Re-translate categories that already have a record             |
+| `npm run translate`                          | Batch-translate all missing catalog content via DeepL          |
+| `npm run translate -- --force`               | Re-translate and overwrite all existing translations           |
+| `npm run translate -- --lang en`             | Batch-translate to a single target language only               |
+| `npm run translate -- --dry-run`             | Preview what would be translated without writing               |
 
-### How the translation script works
+### Content management workflow
 
-`scripts/translate.mjs` connects to PocketBase as an admin, reads all `categories_i18n` and `products_i18n` records in the default language (`is_default: true`), and creates or updates matching records for every other language in the `languages` collection.
+The typical workflow for adding or updating catalog translations:
+
+1. **Create the default-language records first** using `translations:categories` (manual entry for the source language).
+2. **Translate to other languages** using either:
+   - `translate:categories` — interactive, DeepL proposes each field and you press Enter to accept or type a correction. Best when quality matters or content is non-standard.
+   - `translate` — fully automated batch translation. Best for large volumes once you trust the output.
+
+### `scripts/categories-i18n.mjs` — manual entry
+
+Connects to PocketBase, lets you select any language (including the default), and walks you through each category prompting for `name`, `description`, and `slug`. Categories are ordered alphabetically by their `int_ref` label.
+
+- Existing values are shown in brackets — press Enter to keep them
+- Slug is auto-generated from the name; press Enter to accept or type a custom one
+- Skips a category if no name is entered and none exists yet
+- Requires `PB_ADMIN_EMAIL` and `PB_ADMIN_PASSWORD` in `.env.local`
+
+### `scripts/translate-categories.mjs` — assisted translation
+
+Same flow as manual entry but DeepL proposes the translation for each field before you confirm.
+
+- Select a non-default target language from the list
+- For each category: shows `source` value and `proposed` translation; press Enter to accept or type a replacement
+- Slug is derived from the accepted name
+- Skips already-translated records by default; use `--force` to re-translate
+- Requires `PB_ADMIN_EMAIL`, `PB_ADMIN_PASSWORD`, and `DEEPL_API_KEY` in `.env.local`
+
+### `scripts/translate.mjs` — batch translation
+
+Fully automated. Reads all `categories_i18n` and `products_i18n` records in the default language and creates or updates matching records for every other language without any prompts.
 
 - Text fields (`name`, `prod_title`) are translated as plain text
 - Rich fields (`description`, `prod_description`) are translated with `tagHandling: 'html'` to preserve markup
 - `slug` is auto-generated from the translated `name` via slugify — never sent to DeepL
-- Uses batched API calls per language to minimize DeepL requests
 - Requires `PB_ADMIN_EMAIL`, `PB_ADMIN_PASSWORD`, and `DEEPL_API_KEY` in `.env.local`
 - The DeepL free tier is supported automatically (key suffix `:fx` routes to the free endpoint)

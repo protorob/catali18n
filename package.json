@@ -10,7 +10,9 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "translate": "node --env-file=.env.local scripts/translate.mjs"
+    "translate": "node --env-file=.env.local scripts/translate.mjs",
+    "translations:categories": "node --env-file=.env.local scripts/categories-i18n.mjs",
+    "translate:categories": "node --env-file=.env.local scripts/translate-categories.mjs"
   },
   "dependencies": {
     "@astrojs/node": "^10.1.2",
