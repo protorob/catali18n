@@ -22,6 +22,7 @@ export default defineConfig({
     plugins: [tailwindcss()],
     optimizeDeps: {
       exclude: ['pocketbase'],
+      include: ['swiper', 'swiper/modules'],
     },
     resolve: {
       alias: {

@@ -19,6 +19,7 @@ A lightweight, internationalized (i18n) B2B product catalog built with **Astro 6
 - Single dark / light theme toggle with no flash of unstyled content (theme applied inline before first paint)
 - Glassmorphism sticky navbar with responsive mobile drawer
 - Full-width page banners sitewide: homepage hero (custom gradient + CTA), category pages (cat_banner photo + readable overlay), and static pages (standard gradient banner from page frontmatter)
+- Product detail page with Swiper image carousel (hover arrows, drag/swipe, thumbnail strip) and a custom lightbox (keyboard nav, drag/swipe, close on overlay click)
 - Slide-in sidecart drawer with live item counter
 - Quotation cart page with contact form submitted to PocketBase
 - Localized Markdown static pages (About, Terms, Contact, Catalog Download)
@@ -138,18 +139,28 @@ astro.config.mjs          # Astro + Vite configuration
 
 ## Known Gotcha — PocketBase Binary vs npm Package
 
-The `pocketbase` server binary in the project root shares its name with the `pocketbase` npm package. Vite's dependency optimizer will attempt to process the binary as JavaScript and crash with an `Unexpected "\x7f"` (ELF magic byte) error.
+The `pocketbase` server binary in the project root shares its name with the `pocketbase` npm package. When Vite's dependency optimizer scans source files and finds `import('pocketbase')`, it can resolve to the binary instead of the npm package and crash with an `Unexpected "\x7f"` (ELF magic byte) error — taking down the entire dev server and corrupting responses for all other modules.
 
-This is already handled in `astro.config.mjs` via:
+Three mitigations are applied together in `astro.config.mjs` and `cart.astro`:
 
 ```js
+// astro.config.mjs
 vite: {
-  optimizeDeps: { exclude: ['pocketbase'] },
+  optimizeDeps: {
+    exclude: ['pocketbase'],           // don't pre-bundle the npm package
+    include: ['swiper', 'swiper/modules'], // pre-bundle Swiper at startup to prevent
+                                       // a lazy re-scan that triggers the collision
+  },
   resolve: { alias: { pocketbase: path.resolve('./node_modules/pocketbase') } },
 }
 ```
 
-If the error reappears after clearing Vite cache (`.astro/`), verify these two keys are present.
+```js
+// cart.astro — the dynamic import that triggers the scanner
+const PocketBase = (await import(/* @vite-ignore */ 'pocketbase')).default;
+```
+
+`/* @vite-ignore */` tells Vite's static scanner to skip this import entirely, preventing the binary lookup at scan time. If the error reappears after clearing Vite cache (`.astro/`), verify all three mitigations are present.
 
 ---
 
@@ -200,7 +211,7 @@ Same flow as manual entry but DeepL proposes the translation for each field befo
 
 Fully automated. Reads all `categories_i18n` and `products_i18n` records in the default language and creates or updates matching records for every other language without any prompts.
 
-- Text fields (`name`, `prod_title`) are translated as plain text
+- Text fields (`name`, `prod_name`) are translated as plain text
 - Rich fields (`description`, `prod_description`) are translated with `tagHandling: 'html'` to preserve markup
 - `slug` is auto-generated from the translated `name` via slugify — never sent to DeepL
 - Requires `PB_ADMIN_EMAIL`, `PB_ADMIN_PASSWORD`, and `DEEPL_API_KEY` in `.env.local`

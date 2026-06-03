@@ -41,7 +41,15 @@ export const translations = {
       featuredProducts: 'Prodotti in Evidenza',
       browseProductsSub: 'Sfoglia i prodotti raggruppati per applicazione o divisione',
       featuredProductsSub: 'Componenti industriali evidenziati e best-seller',
-      added: 'Aggiunto'
+      added: 'Aggiunto',
+      specifications: 'Specifiche Tecniche',
+      dimensions: 'Dimensioni (L×P×H)',
+      grossWeight: 'Peso Lordo',
+      netWeight: 'Peso Netto',
+      unitsPerCarton: 'Pz per Cartone',
+      cartonDimensions: 'Dim. Cartone (L×P×H)',
+      cartonWeight: 'Peso Cartone',
+      gallery: 'Galleria Immagini'
     },
     cart: {
       title: 'Il Tuo Preventivo',
@@ -110,7 +118,15 @@ export const translations = {
       featuredProducts: 'Featured Products',
       browseProductsSub: 'Browse products grouped by application or division',
       featuredProductsSub: 'Highlighted industrial components and best-sellers',
-      added: 'Added'
+      added: 'Added',
+      specifications: 'Technical Specifications',
+      dimensions: 'Dimensions (W×D×H)',
+      grossWeight: 'Gross Weight',
+      netWeight: 'Net Weight',
+      unitsPerCarton: 'Units per Carton',
+      cartonDimensions: 'Carton Dim. (W×D×H)',
+      cartonWeight: 'Carton Weight',
+      gallery: 'Image Gallery'
     },
     cart: {
       title: 'Your Quotation',

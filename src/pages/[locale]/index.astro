@@ -69,28 +69,28 @@ try {
   // High-fidelity fallback products list
   featuredProducts = [
     {
-      name: 'PLC Controller H100',
-      prod_title: 'Programmable Logic Controller H100',
+      prod_name: 'PLC Controller H100',
       slug: 'plc-controller-h100',
       prod_description: 'Industrial grade PLC with 16 inputs and 12 outputs.',
       expand: {
         record: {
           id: 'fallback_prod_1',
           product_sku: 'PLC-H100-XYZ',
-          product_ean: '8012345678901'
+          product_ean: '8012345678901',
+          product_main_image: null
         }
       }
     },
     {
-      name: 'Sensore Laser L20',
-      prod_title: 'Laser Distance Sensor L20',
+      prod_name: 'Sensore Laser L20',
       slug: 'laser-sensor-l20',
       prod_description: 'High precision laser distance sensor, range up to 20m.',
       expand: {
         record: {
           id: 'fallback_prod_2',
           product_sku: 'SEN-L20-LAS',
-          product_ean: '8012345678902'
+          product_ean: '8012345678902',
+          product_main_image: null
         }
       }
     }
@@ -198,21 +198,27 @@ const gradients = [
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        {featuredProducts.map((prod) => (
-          <div class="flex flex-col bg-app-card border border-app-border/60 rounded-2xl overflow-hidden hover:shadow-lg transition-shadow duration-200">
-            <div class="h-48 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center p-4">
-              <!-- Render modern icon/placeholder since there are no images on base product -->
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="w-16 h-16 text-gray-400 dark:text-gray-600">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-              </svg>
-            </div>
+        {featuredProducts.map((prod) => {
+          const rec = prod.expand?.record;
+          const imgUrl = rec?.product_main_image ? pb.files.getURL(rec, rec.product_main_image) : null;
+          return (
+          <div class="group flex flex-col bg-app-card border border-app-border/60 rounded-2xl overflow-hidden hover:shadow-lg transition-shadow duration-200">
+            <a href={`/${locale}/product/${prod.slug}`} class="block aspect-square bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center overflow-hidden">
+              {imgUrl ? (
+                <img src={imgUrl} alt={prod.prod_name} class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="w-16 h-16 text-gray-400 dark:text-gray-600">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                </svg>
+              )}
+            </a>
             <div class="flex-grow p-6 flex flex-col justify-between">
               <div>
                 <span class="text-[10px] uppercase font-bold tracking-wider text-brand-primary">
-                  {prod.expand?.record?.product_sku || 'SKU-PENDING'}
+                  {rec?.product_sku || 'SKU-PENDING'}
                 </span>
                 <h3 class="text-lg font-bold mt-1 text-app-fg line-clamp-1">
-                  {prod.name || prod.prod_title}
+                  {prod.prod_name}
                 </h3>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 line-clamp-2 font-light">
                   {prod.prod_description?.replace(/<[^>]*>/g, '') || ''}
@@ -231,7 +237,8 @@ const gradients = [
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   </section>

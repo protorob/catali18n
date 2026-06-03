@@ -285,42 +285,32 @@ async function main() {
       }
 
       if (existing && !force) {
-        console.log(`Skipping product "${src.name}" for target ${targetLang.code} (already exists).`);
+        console.log(`Skipping product "${src.prod_name}" for target ${targetLang.code} (already exists).`);
         continue;
       }
       productsToWrite.push({ src, existing });
     }
 
     if (productsToWrite.length > 0) {
-      const names = productsToWrite.map((p) => p.src.name);
-      const titles = productsToWrite.map((p) => p.src.prod_title);
+      const prodNames = productsToWrite.map((p) => p.src.prod_name);
       const descriptions = productsToWrite.map((p) => p.src.prod_description);
 
       console.log(`Translating ${productsToWrite.length} products to ${targetLang.code}...`);
 
-      let translatedNames = [];
-      let translatedTitles = [];
+      let translatedProdNames = [];
       let translatedDescriptions = [];
 
       try {
         if (dryRun) {
-          translatedNames = names.map((n) => `[DRY-RUN] ${n}`);
-          translatedTitles = titles.map((t) => `[DRY-RUN] ${t}`);
+          translatedProdNames = prodNames.map((n) => `[DRY-RUN] ${n}`);
           translatedDescriptions = descriptions.map((d) => `[DRY-RUN] ${d}`);
         } else {
-          const namesResult = await translator.translateText(
-            names,
+          const prodNamesResult = await translator.translateText(
+            prodNames,
             toDeeplSource(defaultLang.code),
             toDeeplTarget(targetLang.code)
           );
-          translatedNames = namesResult.map((r) => decodeEntities(r.text));
-
-          const titlesResult = await translator.translateText(
-            titles,
-            toDeeplSource(defaultLang.code),
-            toDeeplTarget(targetLang.code)
-          );
-          translatedTitles = titlesResult.map((r) => decodeEntities(r.text));
+          translatedProdNames = prodNamesResult.map((r) => decodeEntities(r.text));
 
           const descResult = await translator.translateText(
             descriptions,
@@ -337,10 +327,9 @@ async function main() {
 
       for (let i = 0; i < productsToWrite.length; i++) {
         const { src, existing } = productsToWrite[i];
-        const translatedName = translatedNames[i];
-        const translatedTitle = translatedTitles[i];
+        const translatedProdName = translatedProdNames[i];
         const translatedDesc = translatedDescriptions[i];
-        const generatedSlug = slugify(translatedName);
+        const generatedSlug = slugify(translatedProdName);
 
         if (generatedSlugs.has(generatedSlug)) {
           console.warn(
@@ -353,14 +342,13 @@ async function main() {
           console.log(
             `[DRY-RUN] Would ${
               existing ? 'update' : 'create'
-            } product "${src.name}" -> "${translatedName}" (${targetLang.code}) slug: ${generatedSlug}`
+            } product "${src.prod_name}" -> "${translatedProdName}" (${targetLang.code}) slug: ${generatedSlug}`
           );
         } else {
           const payload = {
             record: src.expand.record.id,
             language: targetLang.id,
-            name: translatedName,
-            prod_title: translatedTitle,
+            prod_name: translatedProdName,
             prod_description: translatedDesc,
             slug: generatedSlug,
           };
@@ -368,13 +356,13 @@ async function main() {
           try {
             if (existing) {
               await pb.collection('products_i18n').update(existing.id, payload);
-              console.log(`✓ Updated product "${src.name}" → "${translatedName}" [${targetLang.code}]`);
+              console.log(`✓ Updated product "${src.prod_name}" → "${translatedProdName}" [${targetLang.code}]`);
             } else {
               await pb.collection('products_i18n').create(payload);
-              console.log(`✓ Created product "${src.name}" → "${translatedName}" [${targetLang.code}]`);
+              console.log(`✓ Created product "${src.prod_name}" → "${translatedProdName}" [${targetLang.code}]`);
             }
           } catch (err) {
-            console.error(`Error: Failed to write product "${src.name}" [${targetLang.code}]`, err.message);
+            console.error(`Error: Failed to write product "${src.prod_name}" [${targetLang.code}]`, err.message);
           }
         }
       }

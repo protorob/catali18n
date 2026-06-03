@@ -44,10 +44,15 @@ PocketBase collection → schema mapping:
 
 ```
 languages          code, name, is_default
-categories         int_ref (internal label, unique), cat_banner (image file)
-categories_i18n    name, slug, description, record (→ categories), language (→ languages)
-products           product_sku, product_ean, category (→ categories), extra_categories[]
-products_i18n      name, slug, prod_title, prod_description, record (→ products), language (→ languages)
+categories         int_ref (internal label, unique), cat_banner (image), cat_icothumb (image)
+categories_i18n    name, slug, description (HTML), record (→ categories), language (→ languages)
+products           product_sku, product_ean, category (→ categories), extra_categories[],
+                   product_main_image (file, single), product_gallery_images (file, up to 10),
+                   product_width_cm, product_lenght_cm*, product_height_cm,
+                   product_weight_kg, product_net_w_kg, product_per_box,
+                   box_width_cm, box_lenght_cm*, box_height_cm, box_weight_kg
+                   (* typo in field name — "lenght" — do not rename, already in production)
+products_i18n      prod_name, slug, prod_description (HTML), record (→ products), language (→ languages)
 quotations         name, email, company, company_address, phone, notes, items (JSON)
 ```
 
@@ -128,31 +133,64 @@ Fully automated batch translation. Reads all `categories_i18n` and `products_i18
 
 ---
 
+## Product detail page — image viewer
+
+`product/[slug].astro` has two image interaction layers:
+
+### Main carousel (Swiper)
+- `#main-swiper` is a standard horizontal Swiper with `Navigation` + `Keyboard` modules.
+- Nav arrows are hidden at rest and revealed on `#main-image-wrap:hover` via CSS (not JS).
+- Clicking a slide calls `openLightbox(mainSwiper.activeIndex)`.
+- Thumbnail strip (`.gallery-thumb` buttons) calls `mainSwiper.slideTo(idx)` — thumbnails do **not** open the lightbox.
+
+### Lightbox (custom, no Swiper)
+Swiper was abandoned for the lightbox because initializing it against a `display:none` or zero-height container produces corrupted slide widths (17 million px) that are impossible to fix reliably with timing hacks. The lightbox uses a simpler approach:
+
+- All images are rendered server-side as `absolute inset-0` divs inside `#lightbox-stage`, stacked on top of each other.
+- `showLbSlide(index)` toggles `opacity` and `pointerEvents` inline styles to make one visible at a time.
+- The lightbox itself is always `display:flex` in the DOM — hidden state is `opacity-0 pointer-events-none` (Tailwind classes), **not** `display:none`. This keeps it in the layout tree so no measurement is needed at open time.
+- **Critical:** the active slide uses `style.pointerEvents = ""` (empty string = inherit), NOT `"auto"`. Setting `"auto"` as an inline style would override the parent's `pointer-events-none` class when the lightbox is closed, making the invisible slide intercept all clicks on the Swiper below.
+- Drag/swipe uses `pointerdown`/`pointerup` on `#lightbox-stage` (covers both desktop mouse drag and mobile touch via the Pointer Events API). Threshold: 50px.
+- Close triggers: close button, Escape key, clicking the overlay area (the slide div, not the `<img>` inside it — checked via `e.target === slide`).
+- Body `overflow` is **not** toggled on open/close — doing so causes a scrollbar layout shift that triggers Swiper's `ResizeObserver` and can corrupt slide positions.
+
+---
+
 ## Critical Vite gotcha
 
-The `pocketbase` server binary in the project root has the same name as the `pocketbase` npm package. When Vite scans for the client-side dynamic `import('pocketbase')` in `cart.astro`, it can resolve to the binary instead of the npm package and crash with:
+The `pocketbase` server binary in the project root has the same name as the `pocketbase` npm package. When Vite's optimizer scans source files and encounters `import('pocketbase')` in `cart.astro`, it can resolve to the binary instead of the npm package and crash the dev server with:
 
 ```
 Unexpected "\x7f"   ← ELF magic byte
 pocketbase:1:0
 ```
 
-Fix already applied in `astro.config.mjs`:
+The crash corrupts responses for all in-flight modules (Swiper chunks, dev toolbar, etc.) making the symptom look like many unrelated errors. Three mitigations are applied:
 
+**`astro.config.mjs`:**
 ```js
 vite: {
-  optimizeDeps: { exclude: ['pocketbase'] },
+  optimizeDeps: {
+    exclude: ['pocketbase'],
+    include: ['swiper', 'swiper/modules'], // pre-bundle at startup; avoids lazy re-scan on first product page load
+  },
   resolve: { alias: { pocketbase: path.resolve('./node_modules/pocketbase') } },
 }
 ```
 
-If you ever clear the Vite cache (`.astro/`) and the error returns, check that both keys are still present.
+**`cart.astro`:**
+```js
+const PocketBase = (await import(/* @vite-ignore */ 'pocketbase')).default;
+```
+
+`/* @vite-ignore */` tells Vite's static scanner to skip this import, preventing the binary lookup at scan time.
+
+If you ever clear the Vite cache (`.astro/`) and errors return, verify all three mitigations are present.
 
 ---
 
 ## Known issues / TODOs
 
 - Several strings in `Layout.astro` (sidecart title, empty state) and `cart.astro` (remove button label) are hardcoded IT/EN ternaries instead of using `t` from `translations.ts`.
-- Product images are not implemented — product cards show an SVG placeholder.
-- The `quotations` PocketBase collection is used client-side but verify it is present in `pb_schema.json` before deploying.
+- The `quotations` PocketBase collection is used client-side — verify it is present in `pb_schema.json` before deploying.
 - `t.product.viewProduct` and `t.product.noProductsInCategory` are referenced in `category/[slug].astro` but may be missing from `translations.ts` — check both locales.

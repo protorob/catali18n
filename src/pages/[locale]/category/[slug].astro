@@ -59,30 +59,16 @@ try {
     categoryDesc = locale === 'it' ? 'Componentistica avanzata e controllori logici per stabilimenti produttivi.' : 'Advanced components and logic controllers for production facilities.';
     products = [
       {
-        name: 'PLC Controller H100',
-        prod_title: 'Programmable Logic Controller H100',
+        prod_name: 'PLC Controller H100',
         slug: 'plc-controller-h100',
         prod_description: 'Industrial grade PLC with 16 inputs and 12 outputs, Din-rail mounted.',
-        expand: {
-          record: {
-            id: 'fallback_p1',
-            product_sku: 'PLC-H100-XYZ',
-            product_ean: '8012345678901'
-          }
-        }
+        expand: { record: { id: 'fallback_p1', product_sku: 'PLC-H100-XYZ', product_main_image: null } }
       },
       {
-        name: 'Modulatore Analogico M40',
-        prod_title: 'Analog Signal Modulator M40',
+        prod_name: 'Modulatore Analogico M40',
         slug: 'analog-modulator-m40',
         prod_description: 'Modulates 4-20mA signals to RS485 Modbus protocol for PLC interfaces.',
-        expand: {
-          record: {
-            id: 'fallback_p2',
-            product_sku: 'MOD-M40-ANA',
-            product_ean: '8012345678903'
-          }
-        }
+        expand: { record: { id: 'fallback_p2', product_sku: 'MOD-M40-ANA', product_main_image: null } }
       }
     ];
   } else if (slug === 'machinery') {
@@ -90,17 +76,10 @@ try {
     categoryDesc = locale === 'it' ? 'Macchine utensili e robotica per la manifattura.' : 'Machine tools and robotics for manufacturing.';
     products = [
       {
-        name: 'Pistone Pneumatico P5',
-        prod_title: 'Pneumatic Actuator P5',
+        prod_name: 'Pistone Pneumatico P5',
         slug: 'pneumatic-actuator-p5',
         prod_description: 'Double acting pneumatic cylinder with magnetic sensor slots.',
-        expand: {
-          record: {
-            id: 'fallback_p3',
-            product_sku: 'ACT-P5-PNEU',
-            product_ean: '8012345678904'
-          }
-        }
+        expand: { record: { id: 'fallback_p3', product_sku: 'ACT-P5-PNEU', product_main_image: null } }
       }
     ];
   } else {
@@ -136,21 +115,28 @@ try {
     <!-- Product list grid -->
     {products.length > 0 ? (
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        {products.map((prod) => (
-          <div class="flex flex-col bg-app-card border border-app-border/60 rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-200">
-            <div class="h-44 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center p-4">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="w-14 h-14 text-gray-400 dark:text-gray-600">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-              </svg>
-            </div>
-            
+        {products.map((prod) => {
+          const rec = prod.expand?.record;
+          const imgUrl = rec?.product_main_image ? pb.files.getURL(rec, rec.product_main_image) : null;
+          return (
+          <div class="group flex flex-col bg-app-card border border-app-border/60 rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-200">
+            <a href={`/${locale}/product/${prod.slug}`} class="block aspect-square bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center overflow-hidden">
+              {imgUrl ? (
+                <img src={imgUrl} alt={prod.prod_name} class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="w-14 h-14 text-gray-400 dark:text-gray-600">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                </svg>
+              )}
+            </a>
+
             <div class="flex-grow p-6 flex flex-col justify-between">
               <div>
                 <span class="text-[10px] uppercase font-bold tracking-wider text-brand-primary">
-                  {prod.expand?.record?.product_sku || 'SKU-PENDING'}
+                  {rec?.product_sku || 'SKU-PENDING'}
                 </span>
                 <h2 class="text-xl font-bold mt-1 text-app-fg line-clamp-1">
-                  {prod.name || prod.prod_title}
+                  {prod.prod_name}
                 </h2>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 line-clamp-2 font-light">
                   {prod.prod_description?.replace(/<[^>]*>/g, '') || ''}
@@ -170,7 +156,8 @@ try {
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     ) : (
       <div class="text-center py-20 bg-app-card border border-app-border border-dashed rounded-3xl">

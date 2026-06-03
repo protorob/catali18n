@@ -233,7 +233,7 @@ const t = getTranslations(locale);
 
     try {
       // Dynamic import to prevent bundler resolution collisions on initial page load
-      const PocketBase = (await import('pocketbase')).default;
+      const PocketBase = (await import(/* @vite-ignore */ 'pocketbase')).default;
       const pb = new PocketBase(import.meta.env.PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090');
       await pb.collection('quotations').create(quotationData);
       console.log('Quotation successfully stored in PocketBase.');
