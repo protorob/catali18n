@@ -2,6 +2,7 @@
 pocketbase
 pocketbase.exe
 pb_data/
+images/
 
 # Astro / Node
 node_modules/

@@ -15,9 +15,10 @@ A lightweight, internationalized (i18n) B2B product catalog built with **Astro 6
 ## Features
 
 - Multi-language localization via `[locale]/` routing — languages driven by PocketBase `languages` collection
-- Navbar language switcher dropdown showing all active languages with full names
+- Navbar language switcher dropdown showing all active languages with full names; category pages pass localized slugs per language to avoid broken redirects when slugs differ across locales
 - Single dark / light theme toggle with no flash of unstyled content (theme applied inline before first paint)
 - Glassmorphism sticky navbar with responsive mobile drawer
+- Full-width page banners sitewide: homepage hero (custom gradient + CTA), category pages (cat_banner photo + readable overlay), and static pages (standard gradient banner from page frontmatter)
 - Slide-in sidecart drawer with live item counter
 - Quotation cart page with contact form submitted to PocketBase
 - Localized Markdown static pages (About, Terms, Contact, Catalog Download)
@@ -96,6 +97,8 @@ src/
 │       └── it/          # Markdown static pages in Italian
 ├── layouts/
 │   └── Layout.astro     # Shared shell: navbar, sidecart drawer, footer, theme scripts
+│                        #   Props: pageTitle/pageDescription (generic banner), localePaths (switcher overrides)
+│                        #   Slots: hero (full-bleed, before main), default (inside max-w-7xl container)
 ├── lib/
 │   ├── pocketbase.ts    # PocketBase client singleton
 │   └── translations.ts  # UI string dictionary (it / en)

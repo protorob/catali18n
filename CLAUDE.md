@@ -65,13 +65,27 @@ On the `/[locale]/cart` page, the form submission does a **client-side dynamic i
 
 ### Language switcher
 
-`Layout.astro` fetches the full `languages` list from PocketBase in the frontmatter and builds a dropdown. Each entry shows `code – name` (e.g. `en – English`). The trigger button shows only the current locale code plus a globe icon. Falls back to `[{code:'it',...},{code:'en',...}]` if PocketBase is unreachable. URL switching uses a generic segment-replace: `/<currentLocale>/...` → `/<targetLocale>/...`.
+`Layout.astro` fetches the full `languages` list from PocketBase in the frontmatter and builds a dropdown. Each entry shows `code – name` (e.g. `en – English`). The trigger button shows only the current locale code plus a globe icon. Falls back to `[{code:'it',...},{code:'en',...}]` if PocketBase is unreachable.
+
+Default URL switching uses a generic segment-replace: `/<currentLocale>/...` → `/<targetLocale>/...`. Pages with locale-specific slugs (e.g. category pages) must pass a `localePaths` prop — a `Record<string, string>` mapping locale code to the correct full path — so the switcher can use the right localized URL instead of blindly replacing the prefix. `category/[slug].astro` does this by fetching all `categories_i18n` records for the current category and building the map server-side.
+
+### Page header system
+
+`Layout.astro` supports three modes for the full-width banner rendered between the navbar and main content:
+
+1. **Named `hero` slot** — highest priority. The page supplies arbitrary markup via `<... slot="hero">`. Used by the homepage (custom gradient + dot pattern + CTA) and category pages (cat_banner image + overlay).
+2. **`pageTitle` / `pageDescription` props** — fallback banner. Layout renders a standard gradient banner when these props are set and the `hero` slot is empty. Used by all static Markdown pages.
+3. **No banner** — if neither the slot nor `pageTitle` is provided, no banner renders (e.g. cart page).
+
+Inner content in both banner modes is wrapped in `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8` to align with the rest of the page.
 
 ### Static Markdown pages
 
 `src/content/pages/[locale]/[slug].md` — frontmatter requires `title`, optional `description`. The glob loader in `content.config.ts` maps them to the `pages` collection. Route: `/[locale]/[slug]` (e.g., `/en/about`).
 
 Translations are **fully manual** — one Markdown file per locale per page. Current pages: `about`, `contact`, `terms`, `catalog-download`. To add a new language, create a new folder (e.g. `src/content/pages/de/`) and write translated `.md` files by hand. There is no script for this. If a locale/slug combination is missing, `[slug].astro` redirects to the localized homepage.
+
+The `h1` from Markdown is hidden via CSS (`display: none`) because the page title is already shown in the Layout banner. `h2` and below render normally.
 
 ---
 
@@ -139,6 +153,6 @@ If you ever clear the Vite cache (`.astro/`) and the error returns, check that b
 ## Known issues / TODOs
 
 - Several strings in `Layout.astro` (sidecart title, empty state) and `cart.astro` (remove button label) are hardcoded IT/EN ternaries instead of using `t` from `translations.ts`.
-- Product images are not implemented — product cards show an SVG placeholder. The `categories` collection has a `cat_banner` field wired up for category cards.
+- Product images are not implemented — product cards show an SVG placeholder.
 - The `quotations` PocketBase collection is used client-side but verify it is present in `pb_schema.json` before deploying.
 - `t.product.viewProduct` and `t.product.noProductsInCategory` are referenced in `category/[slug].astro` but may be missing from `translations.ts` — check both locales.
